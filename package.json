@@ -1,0 +1,13 @@
+{
+  "name": "inventory-app",
+  "version": "1.0.0",
+  "description": "REST API server (Device A) dengan tampilan web client, database SQLite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "better-sqlite3": "^11.3.0"
+  }
+}
