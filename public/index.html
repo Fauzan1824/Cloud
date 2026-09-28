@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Konsol Stok — Device B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12161c;
+    --surface:#1a2029;
+    --surface-2:#20272f;
+    --border:#2a323c;
+    --text:#e6eaef;
+    --text-dim:#8a94a1;
+    --amber:#e3a548;
+    --teal:#5fb0ad;
+    --danger:#d9684f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 32px;
+    border-bottom:1px solid var(--border);
+  }
+  header h1{
+    font-size:18px;
+    font-weight:600;
+    margin:0;
+    letter-spacing:0.2px;
+  }
+  header .sub{
+    color:var(--text-dim);
+    font-size:13px;
+    margin-top:2px;
+  }
+  .status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--text-dim);
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--text-dim);
+    transition:background .2s;
+  }
+  .dot.ok{background:var(--teal);}
+  .dot.bad{background:var(--danger);}
+
+  main{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    gap:1px;
+    background:var(--border);
+  }
+  @media (max-width:820px){
+    main{grid-template-columns:1fr;}
+  }
+  section{background:var(--bg);padding:28px 32px;}
+
+  .panel-title{
+    font-size:13px;
+    color:var(--text-dim);
+    margin:0 0 18px 0;
+    font-weight:500;
+  }
+
+  label{
+    display:block;
+    font-size:12.5px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+  }
+  input{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:4px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    margin-bottom:16px;
+  }
+  input:focus{outline:1px solid var(--amber);border-color:var(--amber);}
+
+  button{
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    padding:9px 14px;
+    border-radius:4px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:500;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  button:hover{border-color:var(--text-dim);}
+  button:focus-visible{outline:2px solid var(--amber);outline-offset:1px;}
+  button.primary{background:var(--amber);border-color:var(--amber);color:#1a1204;}
+  button.primary:hover{background:#eeb35d;}
+  button.danger{color:var(--danger);}
+  button.danger:hover{border-color:var(--danger);}
+  button.ghost{background:transparent;}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+  }
+  th{
+    text-align:left;
+    font-weight:500;
+    color:var(--text-dim);
+    font-size:12.5px;
+    padding:0 12px 10px 12px;
+    border-bottom:1px solid var(--border);
+  }
+  td{
+    padding:12px;
+    border-bottom:1px solid var(--border);
+    vertical-align:middle;
+  }
+  td.mono, th.mono{font-family:'JetBrains Mono',monospace;}
+  td.id{color:var(--text-dim);width:48px;}
+  tr:last-child td{border-bottom:none;}
+  tr.editing td{background:var(--surface-2);}
+
+  .empty{color:var(--text-dim);font-size:13.5px;padding:20px 0;}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+  .edit-input{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:13.5px;
+    padding:6px 8px;
+    border-radius:3px;
+    width:100%;
+    margin-bottom:0;
+  }
+  .log{
+    margin-top:18px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--text-dim);
+    border-top:1px solid var(--border);
+    padding-top:12px;
+    max-height:90px;
+    overflow-y:auto;
+  }
+  .log div{margin-bottom:4px;}
+  .log .err{color:var(--danger);}
+  .log .ok{color:var(--teal);}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Konsol Stok</h1>
+    <div class="sub">Client Device B &middot; terhubung ke Device A</div>
+  </div>
+  <div class="status">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">memeriksa koneksi…</span>
+  </div>
+</header>
+
+<main>
+  <section>
+    <p class="panel-title">Tambah barang baru (POST)</p>
+    <form id="formTambah">
+      <label for="nama">Nama barang</label>
+      <input id="nama" type="text" placeholder="cth. Webcam" required>
+      <label for="harga">Harga (Rp)</label>
+      <input id="harga" type="number" placeholder="cth. 350000" required min="0" step="1">
+      <button type="submit" class="primary" style="width:100%;">Tambah barang</button>
+    </form>
+    <div class="log" id="log"></div>
+  </section>
+
+  <section>
+    <div class="toolbar">
+      <p class="panel-title" style="margin:0;">Daftar barang (GET)</p>
+      <button class="ghost" id="btnRefresh">Muat ulang</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th class="mono">ID</th>
+          <th>Nama</th>
+          <th class="mono">Harga</th>
+          <th style="width:180px;">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="emptyMsg" style="display:none;">Belum ada data. Tambahkan barang di panel kiri.</div>
+  </section>
+</main>
+
+<script>
+const logEl = document.getElementById('log');
+const dot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const tbody = document.getElementById('tbody');
+const emptyMsg = document.getElementById('emptyMsg');
+
+// Escape teks supaya aman dimasukkan ke innerHTML (mencegah XSS)
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function log(msg, kind){
+  const line = document.createElement('div');
+  if(kind) line.className = kind;
+  const t = new Date().toLocaleTimeString();
+  line.textContent = `[${t}] ${msg}`;
+  logEl.prepend(line);
+}
+
+// Helper: parse JSON dengan aman, walau server membalas non-JSON
+async function bacaJson(r){
+  try{ return await r.json(); }
+  catch(e){ return { message: 'Respon server tidak valid (HTTP ' + r.status + ')' }; }
+}
+
+async function cekStatus(){
+  try{
+    const r = await fetch('/api/status');
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    dot.className = 'dot ok';
+    statusText.textContent = j.message;
+  }catch(e){
+    dot.className = 'dot bad';
+    statusText.textContent = 'server tidak terjangkau';
+  }
+}
+
+async function muatData(){
+  try{
+    const r = await fetch('/api/barang');
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    renderTabel(j.data);
+    log(`GET /api/barang → ${j.jumlah} item`, 'ok');
+  }catch(e){
+    log('GET /api/barang gagal: ' + e.message, 'err');
+  }
+}
+
+function formatRupiah(angka){
+  return 'Rp' + Number(angka).toLocaleString('id-ID');
+}
+
+function renderTabel(data){
+  tbody.innerHTML = '';
+  emptyMsg.style.display = data.length ? 'none' : 'block';
+  data.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = item.id;
+    tr.innerHTML = `
+      <td class="id mono">${item.id}</td>
+      <td class="nama-cell">${esc(item.nama)}</td>
+      <td class="mono harga-cell">${formatRupiah(item.harga)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="ghost btn-edit">Ubah</button>
+          <button class="danger ghost btn-delete">Hapus</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+tbody.addEventListener('click', async (e) => {
+  const tr = e.target.closest('tr');
+  if (!tr) return;
+  const id = tr.dataset.id;
+
+  // ---- Hapus (DELETE) ----
+  if (e.target.classList.contains('btn-delete')) {
+    if (!confirm(`Hapus barang id ${id}?`)) return;
+    try{
+      const r = await fetch(`/api/barang/${id}`, { method:'DELETE' });
+      const j = await bacaJson(r);
+      log(`DELETE /api/barang/${id} → ${j.message}`, r.ok ? 'ok' : 'err');
+      muatData();
+    }catch(err){ log('DELETE gagal: ' + err.message, 'err'); }
+  }
+
+  // ---- Masuk mode edit (siap untuk PUT) ----
+  if (e.target.classList.contains('btn-edit')) {
+    const namaCell = tr.querySelector('.nama-cell');
+    const hargaCell = tr.querySelector('.harga-cell');
+    const namaLama = namaCell.textContent;
+    const hargaLama = hargaCell.textContent.replace(/[^\d]/g,'');
+
+    tr.classList.add('editing');
+    namaCell.innerHTML = `<input class="edit-input" value="${esc(namaLama)}">`;
+    hargaCell.innerHTML = `<input class="edit-input" type="number" min="0" step="1" value="${esc(hargaLama)}">`;
+
+    const actionCell = tr.querySelector('.row-actions');
+    actionCell.innerHTML = `
+      <button class="primary btn-save">Simpan</button>
+      <button class="ghost btn-cancel">Batal</button>
+    `;
+  }
+
+  // ---- Simpan perubahan (PUT) ----
+  if (e.target.classList.contains('btn-save')) {
+    const namaBaru = tr.querySelector('.nama-cell input').value;
+    const hargaBaru = Number(tr.querySelector('.harga-cell input').value);
+    try{
+      const r = await fetch(`/api/barang/${id}`, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ nama: namaBaru, harga: hargaBaru })
+      });
+      const j = await bacaJson(r);
+      log(`PUT /api/barang/${id} → ${j.message}`, r.ok ? 'ok' : 'err');
+      if (r.ok) muatData();
+    }catch(err){ log('PUT gagal: ' + err.message, 'err'); }
+  }
+
+  // ---- Batal edit ----
+  if (e.target.classList.contains('btn-cancel')) {
+    muatData();
+  }
+});
+
+document.getElementById('formTambah').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const nama = document.getElementById('nama').value;
+  const harga = Number(document.getElementById('harga').value);
+  try{
+    const r = await fetch('/api/barang', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ nama, harga })
+    });
+    const j = await bacaJson(r);
+    log(`POST /api/barang → ${j.message}`, r.ok ? 'ok' : 'err');
+    if (r.ok) {
+      form.reset();
+      muatData();
+    }
+  }catch(err){ log('POST gagal: ' + err.message, 'err'); }
+});
+
+document.getElementById('btnRefresh').addEventListener('click', muatData);
+
+cekStatus();
+muatData();
+</script>
+</body>
+</html>
